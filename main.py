@@ -3,6 +3,7 @@
 import pygame
 import random
 from os import path
+from bullet import Bullet
 
 img_dir = path.join(path.dirname(__file__), 'img')
 snd_dir = path.join(path.dirname(__file__), 'snd')
@@ -190,24 +191,6 @@ class Mob(pygame.sprite.Sprite):
             self.rect.y = random.randrange(-100, -40)
             self.speedy = random.randrange(1, 8)
 
-
-class Bullet(pygame.sprite.Sprite):
-    def __init__(self, x, y):
-        pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.Surface((10, 20))
-        self.image = bullet_img
-        self.rect = self.image.get_rect()
-        self.rect.bottom = y
-        self.rect.centerx = x
-        self.speedy = -10
-        self.shoot_delay = 250
-        self.last_shot = pygame.time.get_ticks()
-
-    def update(self):
-        self.rect.y += self.speedy
-        # убить, если он заходит за верхнюю часть экрана
-        if self.rect.bottom < 0:
-            self.kill()
 
 
 class Pow(pygame.sprite.Sprite):
