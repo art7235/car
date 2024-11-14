@@ -4,6 +4,8 @@ import pygame
 import random
 from os import path
 from bullet import Bullet
+from mob import Mob
+from pow import Pow
 
 img_dir = path.join(path.dirname(__file__), 'img')
 snd_dir = path.join(path.dirname(__file__), 'snd')
@@ -152,62 +154,7 @@ class Player(pygame.sprite.Sprite):
         self.power_time = pygame.time.get_ticks()
 
 
-class Mob(pygame.sprite.Sprite):
-    def __init__(self):
-        pygame.sprite.Sprite.__init__(self)
 
-        self.image_orig = random.choice(meteor_images)
-        self.image_orig.set_colorkey(BLACK)
-        self.image = self.image_orig.copy()
-        self.rect = self.image.get_rect()
-        self.radius = int(self.rect.width * .85 / 2)
-        self.rect.x = random.randrange(WIDTH - self.rect.width)
-        self.rect.y = random.randrange(-150, -100)
-        self.speedy = random.randrange(1, 8)
-        self.speedx = random.randrange(-3, 3)
-        self.rot = 0
-        self.rot_speed = random.randrange(-8, 8)
-        self.last_update = pygame.time.get_ticks()
-
-    def rotate(self):
-        now = pygame.time.get_ticks()
-        if now - self.last_update > 50:
-            self.last_update = now
-            self.rot = (self.rot + self.rot_speed) % 360
-            self.image = pygame.transform.rotate(self.image_orig, self.rot)
-            new_image = pygame.transform.rotate(self.image_orig, self.rot)
-            old_center = self.rect.center
-            self.image = new_image
-            self.rect = self.image.get_rect()
-            self.rect.center = old_center
-
-    def update(self):
-        self.rotate()
-        self.image = pygame.transform.rotate(self.image, self.rot_speed)
-        self.rect.x += self.speedx
-        self.rect.y += self.speedy
-        if self.rect.top > HEIGHT + 10 or self.rect.left < -25 or self.rect.right > WIDTH + 20:
-            self.rect.x = random.randrange(WIDTH - self.rect.width)
-            self.rect.y = random.randrange(-100, -40)
-            self.speedy = random.randrange(1, 8)
-
-
-
-class Pow(pygame.sprite.Sprite):
-    def __init__(self, center):
-        pygame.sprite.Sprite.__init__(self)
-        self.type = random.choice(['shield', 'gun'])
-        self.image = powerup_images[self.type]
-        self.image.set_colorkey(BLACK)
-        self.rect = self.image.get_rect()
-        self.rect.center = center
-        self.speedy = 2
-
-    def update(self):
-        self.rect.y += self.speedy
-        # убить, если он сдвинется с нижней части экрана
-        if self.rect.top > HEIGHT:
-            self.kill()
 
 
 class Explosion(pygame.sprite.Sprite):
@@ -240,7 +187,6 @@ background = pygame.image.load(path.join(img_dir, 'purple.png')).convert()
 background_rect = background.get_rect()
 background = pygame.transform.scale(background, (WIDTH, HEIGHT))
 player_img = pygame.image.load(path.join(img_dir, "playerShip1_red.png")).convert()
-meteor_img = pygame.image.load(path.join(img_dir, "meteorBrown_big1.png")).convert()
 bullet_img = pygame.image.load(path.join(img_dir, "laserGreen07.png")).convert()
 shoot_sound = pygame.mixer.Sound(path.join(snd_dir, 'pew.wav'))
 expl_sounds = []
@@ -252,10 +198,10 @@ player_img = pygame.image.load(path.join(img_dir, "playerShip1_red.png")).conver
 player_mini_img = pygame.transform.scale(player_img, (25, 19))
 player_mini_img.set_colorkey(BLACK)
 
-meteor_images = []
-meteor_list = ['meteorBrown_big1.png']
-for img in meteor_list:
-    meteor_images.append(pygame.image.load(path.join(img_dir, img)).convert())
+# meteor_images = []
+# meteor_list = ['meteorBrown_big1.png']
+# for img in meteor_list:
+#     meteor_images.append(pygame.image.load(path.join(img_dir, img)).convert())
 
 explosion_anim = {}
 explosion_anim['lg'] = []
@@ -279,11 +225,6 @@ for i in range(9):
     expl_sounds = []
     for snd in ['expl3.wav', 'expl6.wav']:
         expl_sounds.append(pygame.mixer.Sound(path.join(snd_dir, snd)))
-
-powerup_images = {}
-powerup_images['shield'] = pygame.image.load(path.join(img_dir, 'shield_gold.png')).convert()
-powerup_images['gun'] = pygame.image.load(path.join(img_dir, 'bolt_gold.png')).convert()
-powerups = pygame.sprite.Group()
 
 
 def newmob():
