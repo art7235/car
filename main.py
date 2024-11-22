@@ -137,13 +137,13 @@ class Player(pygame.sprite.Sprite):
         if now - self.last_shot > self.shoot_delay:
             self.last_shot = now
             if self.power == 1:
-                bullet = Bullet(self.rect.centerx, self.rect.top)
+                bullet = Bullet(self.rect.centerx, self.rect.top, -10)
                 all_sprites.add(bullet)
                 bullets.add(bullet)
                 shoot_sound.play()
             if self.power >= 2:
-                bullet1 = Bullet(self.rect.left, self.rect.centery)
-                bullet2 = Bullet(self.rect.right, self.rect.centery)
+                bullet1 = Bullet(self.rect.left, self.rect.centery,-10)
+                bullet2 = Bullet(self.rect.right, self.rect.centery, -10)
                 all_sprites.add(bullet1)
                 all_sprites.add(bullet2)
                 bullets.add(bullet1)
@@ -176,28 +176,28 @@ player_mini_img.set_colorkey(BLACK)
 # for img in meteor_list:
 #     meteor_images.append(pygame.image.load(path.join(img_dir, img)).convert())
 
-# explosion_anim = {}
-# explosion_anim['lg'] = []
-# explosion_anim['sm'] = []
-# explosion_anim['player'] = []
-# for i in range(9):
-#     filename = 'regularExplosion0{}.png'.format(i)
-#     img = pygame.image.load(path.join(img_dir, filename)).convert()
-#     img.set_colorkey(BLACK)
-#     img_lg = pygame.transform.scale(img, (75, 75))
-#     explosion_anim['lg'].append(img_lg)
-#     img_sm = pygame.transform.scale(img, (32, 32))
-#     explosion_anim['sm'].append(img_sm)
-#     filename = 'sonicExplosion0{}.png'.format(i)
-#     img = pygame.image.load(path.join(img_dir, filename)).convert()
-#     img.set_colorkey(BLACK)
-#     explosion_anim['player'].append(img)
-#
-#     # Загрузка мелодий игры
-#     shoot_sound = pygame.mixer.Sound(path.join(snd_dir, 'pew.wav'))
-#     expl_sounds = []
-#     for snd in ['expl3.wav', 'expl6.wav']:
-#         expl_sounds.append(pygame.mixer.Sound(path.join(snd_dir, snd)))
+explosion_anim = {}
+explosion_anim['lg'] = []
+explosion_anim['sm'] = []
+explosion_anim['player'] = []
+for i in range(9):
+    filename = 'regularExplosion0{}.png'.format(i)
+    img = pygame.image.load(path.join(img_dir, filename)).convert()
+    img.set_colorkey(BLACK)
+    img_lg = pygame.transform.scale(img, (75, 75))
+    explosion_anim['lg'].append(img_lg)
+    img_sm = pygame.transform.scale(img, (32, 32))
+    explosion_anim['sm'].append(img_sm)
+    filename = 'sonicExplosion0{}.png'.format(i)
+    img = pygame.image.load(path.join(img_dir, filename)).convert()
+    img.set_colorkey(BLACK)
+    explosion_anim['player'].append(img)
+
+    # Загрузка мелодий игры
+    shoot_sound = pygame.mixer.Sound(path.join(snd_dir, 'pew.wav'))
+    expl_sounds = []
+    for snd in ['expl3.wav', 'expl6.wav']:
+        expl_sounds.append(pygame.mixer.Sound(path.join(snd_dir, snd)))
 
 
 def newmob():
