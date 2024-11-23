@@ -155,13 +155,13 @@ class Player(pygame.sprite.Sprite):
         if now - self.last_shot > self.shoot_delay:
             self.last_shot = now
             if self.power == 1:
-                bullet = Bullet(self.rect.centerx, self.rect.top, -10)
+                bullet = Bullet(self.rect.centerx, self.rect.top, -10, "laserGreen07.png")
                 all_sprites.add(bullet)
                 bullets.add(bullet)
                 shoot_sound.play()
             if self.power >= 2:
-                bullet1 = Bullet(self.rect.left, self.rect.centery, -10)
-                bullet2 = Bullet(self.rect.right, self.rect.centery, -10)
+                bullet1 = Bullet(self.rect.left, self.rect.centery, -10, "laserGreen07.png")
+                bullet2 = Bullet(self.rect.right, self.rect.centery, -10, "laserGreen07.png")
                 all_sprites.add(bullet1)
                 all_sprites.add(bullet2)
                 bullets.add(bullet1)
@@ -189,30 +189,34 @@ class Enemy(pygame.sprite.Sprite):
         self.radius = int(self.rect.width * .85 / 2)
         self.rect.x = random.randrange(WIDTH - self.rect.width)
         self.rect.y = random.randrange(5, 15)
-        self.speedy = random.randrange(1, 8)
+        self.speedy = 0
         self.last_shot = pygame.time.get_ticks()
         self.a = pygame.time.get_ticks()
         self.creation_time = pygame.time.get_ticks()  # Время создания врага
-        self.lifetime = 10000  # Время жизни врага в миллисекундах (10 секунд)
+        self.lifetime = 5000  # Время жизни врага в миллисекундах (10 секунд)
         self.rot = 180
         self.image = pygame.transform.rotate(self.image_orig, self.rot)
         self.shoot_delay = random.randint(250, 500)
 
     def shoot(self):
-        now = pygame.time.get_ticks()
-        if now - self.last_shot > self.shoot_delay:
-            self.last_shot = now
-            bullet = Bullet(self.rect.centerx, self.rect.bottom, 10)
-            all_sprites.add(bullet)
-            bullets_enemy.add(bullet)
-            # shoot_sound.play()
+        if self.speedy == 0:
+            now = pygame.time.get_ticks()
+            if now - self.last_shot > self.shoot_delay:
+                self.last_shot = now
+                bullet = Bullet(self.rect.centerx, self.rect.bottom, 10, "laserRed06.png")
+                all_sprites.add(bullet)
+                bullets_enemy.add(bullet)
+                shoot_sound.play()
 
 
     def update(self):
         current_time = pygame.time.get_ticks()  # Текущее время
         self.shoot()
         if current_time - self.creation_time > self.lifetime:  # Проверка на истечение времени жизни
-            self.kill()  # Убить спрайт (удалить его из всех групп)
+            self.speedy = 7
+            self.rect.y += self.speedy
+            if self.rect.top > HEIGHT:
+                self.kill()  # Убить спрайт (удалить его из всех групп)
 
 
 
@@ -245,13 +249,13 @@ mobs = pygame.sprite.Group()
 bullets = pygame.sprite.Group()
 bullets_enemy = pygame.sprite.Group()
 player = Player()
-player_group = pygame.sprite.Group
+player_group = pygame.sprite.Group()
 player_group.add(player)
 all_sprites.add(player)
 for i in range(8):
     newmob()
 score = 0
-pygame.mixer.music.play(loops=-1)
+# pygame.mixer.music.play(loops=-1)
 
 last_spawn_time = pygame.time.get_ticks()  # Текущее время в миллисекундах
 spawn_interval = 10000  # Интервал спавна врагов в миллисекундах (10 секунд)
@@ -307,9 +311,15 @@ while running:
             powerups.add(pow)
         newmob()
 
-    hits = pygame.sprite.groupcollide(player_group, bullets_enemy, True, True)
+    hits = pygame.sprite.spritecollide(player, bullets_enemy, True, pygame.sprite.collide_circle)
     for hit in hits:
         player.shield -= 10
+        if player.shield <= 0:
+            death_explosion = Explosion(player.rect.center, 'player')
+            all_sprites.add(death_explosion)
+            player.hide()
+            player.lives -= 1
+            player.shield = 100
 
     # Проверка столкновений игрока и улучшения
     hits = pygame.sprite.spritecollide(player, powerups, True)
