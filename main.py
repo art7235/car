@@ -46,6 +46,14 @@ def draw_text(surf, text, size, x, y):
     surf.blit(text_surface, text_rect)
 
 
+def draw_blue_text(surf, text, size, x, y):
+    font = pygame.font.Font(font_name, size)
+    text_surface = font.render(text, True, (0, 0, 255))  # Используем синий цвет (RGB: 0, 0, 255)
+    text_rect = text_surface.get_rect()
+    text_rect.midtop = (x, y)
+    surf.blit(text_surface, text_rect)
+
+
 def draw_lives(surf, x, y, lives, img):
     for i in range(lives):
         img_rect = img.get_rect()
@@ -66,6 +74,18 @@ def draw_shield_bar(surf, x, y, pct):
     pygame.draw.rect(surf, WHITE, outline_rect, 2)
 
 
+def draw_bullet_mana_bar(surf, x, y, pct):
+    if pct < 0:
+        pct = 0
+    BAR_LENGTH = 100
+    BAR_HEIGHT = 10
+    fill = (pct / 100) * BAR_LENGTH
+    outline_rect = pygame.Rect(x, y, BAR_LENGTH, BAR_HEIGHT)
+    fill_rect = pygame.Rect(x, y, fill, BAR_HEIGHT)
+    pygame.draw.rect(surf, (0, 0, 255), fill_rect)
+    pygame.draw.rect(surf, WHITE, outline_rect, 2)
+
+
 def show_go_screen():
     screen.blit(background, background_rect)
     draw_text(screen, "SHMUP!", 64, WIDTH / 2, HEIGHT / 4)
@@ -81,6 +101,7 @@ def show_go_screen():
                 pygame.quit()
             if event.type == pygame.KEYUP:
                 waiting = False
+
 
 def spawn():
     last_spawn_time = pygame.time.get_ticks()  # Текущее время в миллисекундах
@@ -111,14 +132,16 @@ class Player(pygame.sprite.Sprite):
         self.rect.bottom = HEIGHT - 10
         self.speedx = 0
         self.shield = 100
+        self.gun = 100
         self.image.set_colorkey(BLACK)
-        self.shoot_delay = 250
+        self.shoot_delay = 450
         self.last_shot = pygame.time.get_ticks()
         self.lives = 3
         self.hidden = False
         self.hide_timer = pygame.time.get_ticks()
         self.power = 1
         self.power_time = pygame.time.get_ticks()
+        self.restore_gun = pygame.time.get_ticks()
 
     def hide(self):
         # временно скрыть игрока
@@ -150,23 +173,32 @@ class Player(pygame.sprite.Sprite):
             self.power -= 1
             self.power_time = pygame.time.get_ticks()
 
+        if self.gun < 80:
+            now = pygame.time.get_ticks()
+            if now - self.restore_gun > 1000:
+                self.gun += 1
+                self.restore_gun = now
+
     def shoot(self):
-        now = pygame.time.get_ticks()
-        if now - self.last_shot > self.shoot_delay:
-            self.last_shot = now
-            if self.power == 1:
-                bullet = Bullet(self.rect.centerx, self.rect.top, -10, "laserGreen07.png")
-                all_sprites.add(bullet)
-                bullets.add(bullet)
-                shoot_sound.play()
-            if self.power >= 2:
-                bullet1 = Bullet(self.rect.left, self.rect.centery, -10, "laserGreen07.png")
-                bullet2 = Bullet(self.rect.right, self.rect.centery, -10, "laserGreen07.png")
-                all_sprites.add(bullet1)
-                all_sprites.add(bullet2)
-                bullets.add(bullet1)
-                bullets.add(bullet2)
-                shoot_sound.play()
+        if self.gun > 0:
+            now = pygame.time.get_ticks()
+            if now - self.last_shot > self.shoot_delay:
+                self.last_shot = now
+                if self.power == 1:
+                    bullet = Bullet(self.rect.centerx, self.rect.top, -5, "laserGreen07.png")
+                    all_sprites.add(bullet)
+                    bullets.add(bullet)
+                    shoot_sound.play()
+                    self.gun -= 2
+                if self.power >= 2:
+                    bullet1 = Bullet(self.rect.left, self.rect.centery, -5, "laserGreen07.png")
+                    bullet2 = Bullet(self.rect.right, self.rect.centery, -5, "laserGreen07.png")
+                    all_sprites.add(bullet1)
+                    all_sprites.add(bullet2)
+                    bullets.add(bullet1)
+                    bullets.add(bullet2)
+                    shoot_sound.play()
+                    self.gun -= 4
 
     def powerup(self):
         self.power += 1
@@ -208,7 +240,6 @@ class Enemy(pygame.sprite.Sprite):
                 bullets_enemy.add(bullet)
                 shoot_sound.play()
 
-
     def update(self):
         current_time = pygame.time.get_ticks()  # Текущее время
         self.shoot()
@@ -217,7 +248,6 @@ class Enemy(pygame.sprite.Sprite):
             self.rect.y += self.speedy
             if self.rect.top > HEIGHT:
                 self.kill()  # Убить спрайт (удалить его из всех групп)
-
 
 
 # загрузка всей графики
@@ -252,6 +282,7 @@ player = Player()
 player_group = pygame.sprite.Group()
 player_group.add(player)
 all_sprites.add(player)
+enemy = 0
 for i in range(8):
     newmob()
 score = 0
@@ -292,8 +323,8 @@ while running:
     if current_time - last_spawn_time > spawn_interval:
         last_spawn_time = current_time  # Обновляем время последнего спавна
         new_enemy = Enemy()  # Создаем нового врага
-        all_sprites.add(new_enemy)  # Добавляем врага в группу спрайтов
-
+        all_sprites.add(new_enemy) # Добавляем врага в группу спрайтов
+        enemy = 1
     # Обновление
     all_sprites.update()
 
@@ -310,6 +341,18 @@ while running:
             all_sprites.add(pow)
             powerups.add(pow)
         newmob()
+
+    # if enemy == 1:
+    #     if new_enemy in all_sprites:
+    #         hits = pygame.sprite.spritecollide(player, new_enemy, True, pygame.sprite.collide_circle)
+    #         player.shield -= 30
+    #         enemy = 0
+    #         if player.shield <= 0:
+    #             death_explosion = Explosion(player.rect.center, 'player')
+    #             all_sprites.add(death_explosion)
+    #             player.hide()
+    #             player.lives -= 1
+    #             player.shield = 100
 
     hits = pygame.sprite.spritecollide(player, bullets_enemy, True, pygame.sprite.collide_circle)
     for hit in hits:
@@ -354,7 +397,9 @@ while running:
     screen.blit(background, background_rect)
     all_sprites.draw(screen)
     draw_text(screen, str(score), 18, WIDTH / 2, 10)
+
     draw_shield_bar(screen, 5, 5, player.shield)
+    draw_bullet_mana_bar(screen, 5, 15, player.gun)
     draw_lives(screen, WIDTH - 100, 5, player.lives, player_mini_img)
     # отрисовка всего экрана
     pygame.display.flip()
