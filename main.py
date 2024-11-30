@@ -103,23 +103,6 @@ def show_go_screen():
                 waiting = False
 
 
-def spawn():
-    last_spawn_time = pygame.time.get_ticks()  # Текущее время в миллисекундах
-    spawn_interval = 10000  # Интервал спавна врагов в миллисекундах (10 секунд)
-
-    # running = True
-    # while running:
-    #     for event in pygame.event.get():
-    #         if event.type == pygame.QUIT:
-    #             running = False
-    current_time = pygame.time.get_ticks()
-    # Проверка, прошло ли 10 секунд
-    if current_time - last_spawn_time > spawn_interval:
-        last_spawn_time = current_time  # Обновляем время последнего спавна
-        new_enemy = Enemy()  # Создаем нового врага
-        all_sprites.add(new_enemy)  # Добавляем врага в группу спрайтов
-
-
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
@@ -323,7 +306,7 @@ while running:
     if current_time - last_spawn_time > spawn_interval:
         last_spawn_time = current_time  # Обновляем время последнего спавна
         new_enemy = Enemy()  # Создаем нового врага
-        all_sprites.add(new_enemy) # Добавляем врага в группу спрайтов
+        all_sprites.add(new_enemy)  # Добавляем врага в группу спрайтов
         enemy = 1
     # Обновление
     all_sprites.update()
