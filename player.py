@@ -1,6 +1,7 @@
 import pygame
 from os import path
 from bullet import Bullet
+import sprites
 
 WIDTH = 480
 HEIGHT = 600
@@ -30,14 +31,16 @@ class Player(pygame.sprite.Sprite):
         self.rect.bottom = HEIGHT - 10
         self.speedx = 0
         self.shield = 100
+        self.gun = 100
         self.image.set_colorkey(BLACK)
-        self.shoot_delay = 250
+        self.shoot_delay = 450
         self.last_shot = pygame.time.get_ticks()
         self.lives = 3
         self.hidden = False
         self.hide_timer = pygame.time.get_ticks()
         self.power = 1
         self.power_time = pygame.time.get_ticks()
+        self.restore_gun = pygame.time.get_ticks()
 
     def hide(self):
         # временно скрыть игрока
@@ -69,23 +72,32 @@ class Player(pygame.sprite.Sprite):
             self.power -= 1
             self.power_time = pygame.time.get_ticks()
 
+        if self.gun < 80:
+            now = pygame.time.get_ticks()
+            if now - self.restore_gun > 1000:
+                self.gun += 1
+                self.restore_gun = now
+
     def shoot(self):
-        now = pygame.time.get_ticks()
-        if now - self.last_shot > self.shoot_delay:
-            self.last_shot = now
-            if self.power == 1:
-                bullet = Bullet(self.rect.centerx, self.rect.top)
-                all_sprites.add(bullet)
-                bullets.add(bullet)
-                shoot_sound.play()
-            if self.power >= 2:
-                bullet1 = Bullet(self.rect.left, self.rect.centery)
-                bullet2 = Bullet(self.rect.right, self.rect.centery)
-                all_sprites.add(bullet1)
-                all_sprites.add(bullet2)
-                bullets.add(bullet1)
-                bullets.add(bullet2)
-                shoot_sound.play()
+        if self.gun > 0:
+            now = pygame.time.get_ticks()
+            if now - self.last_shot > self.shoot_delay:
+                self.last_shot = now
+                if self.power == 1:
+                    bullet = Bullet(self.rect.centerx, self.rect.top, -5, "laserGreen07.png")
+                    sprites.all_sprites.add(bullet)
+                    sprites.bullets.add(bullet)
+                    shoot_sound.play()
+                    self.gun -= 2
+                if self.power >= 2:
+                    bullet1 = Bullet(self.rect.left, self.rect.centery, -5, "laserGreen07.png")
+                    bullet2 = Bullet(self.rect.right, self.rect.centery, -5, "laserGreen07.png")
+                    sprites.all_sprites.add(bullet1)
+                    sprites.all_sprites.add(bullet2)
+                    sprites.bullets.add(bullet1)
+                    sprites.bullets.add(bullet2)
+                    shoot_sound.play()
+                    self.gun -= 4
 
     def powerup(self):
         self.power += 1
