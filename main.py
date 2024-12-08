@@ -7,8 +7,10 @@ from bullet import Bullet
 from mob import Mob
 from pow import Pow
 from explosion import Explosion
+from enemy import Enemy
+import sprites
 
-# from enemy import Enemy
+
 
 img_dir = path.join(path.dirname(__file__), 'img')
 snd_dir = path.join(path.dirname(__file__), 'snd')
@@ -169,68 +171,23 @@ class Player(pygame.sprite.Sprite):
                 self.last_shot = now
                 if self.power == 1:
                     bullet = Bullet(self.rect.centerx, self.rect.top, -5, "laserGreen07.png")
-                    all_sprites.add(bullet)
-                    bullets.add(bullet)
+                    sprites.all_sprites.add(bullet)
+                    sprites.bullets.add(bullet)
                     shoot_sound.play()
                     self.gun -= 2
                 if self.power >= 2:
                     bullet1 = Bullet(self.rect.left, self.rect.centery, -5, "laserGreen07.png")
                     bullet2 = Bullet(self.rect.right, self.rect.centery, -5, "laserGreen07.png")
-                    all_sprites.add(bullet1)
-                    all_sprites.add(bullet2)
-                    bullets.add(bullet1)
-                    bullets.add(bullet2)
+                    sprites.all_sprites.add(bullet1)
+                    sprites.all_sprites.add(bullet2)
+                    sprites.bullets.add(bullet1)
+                    sprites.bullets.add(bullet2)
                     shoot_sound.play()
                     self.gun -= 4
 
     def powerup(self):
         self.power += 1
         self.power_time = pygame.time.get_ticks()
-
-
-shoot_time = 10000
-start_time = pygame.time.get_ticks()
-
-
-class Enemy(pygame.sprite.Sprite):
-    def __init__(self):
-        pygame.sprite.Sprite.__init__(self)
-
-        self.image = pygame.Surface((50, 40))
-        self.image_orig = enemy_player_img
-        self.image_orig.set_colorkey(BLACK)
-        self.image = self.image_orig.copy()
-        self.rect = self.image.get_rect()
-        self.radius = int(self.rect.width * .85 / 2)
-        self.rect.x = random.randrange(WIDTH - self.rect.width)
-        self.rect.y = random.randrange(5, 15)
-        self.speedy = 0
-        self.last_shot = pygame.time.get_ticks()
-        self.a = pygame.time.get_ticks()
-        self.creation_time = pygame.time.get_ticks()  # Время создания врага
-        self.lifetime = 5000  # Время жизни врага в миллисекундах (10 секунд)
-        self.rot = 180
-        self.image = pygame.transform.rotate(self.image_orig, self.rot)
-        self.shoot_delay = random.randint(250, 500)
-
-    def shoot(self):
-        if self.speedy == 0:
-            now = pygame.time.get_ticks()
-            if now - self.last_shot > self.shoot_delay:
-                self.last_shot = now
-                bullet = Bullet(self.rect.centerx, self.rect.bottom, 10, "laserRed06.png")
-                all_sprites.add(bullet)
-                bullets_enemy.add(bullet)
-                shoot_sound.play()
-
-    def update(self):
-        current_time = pygame.time.get_ticks()  # Текущее время
-        self.shoot()
-        if current_time - self.creation_time > self.lifetime:  # Проверка на истечение времени жизни
-            self.speedy = 7
-            self.rect.y += self.speedy
-            if self.rect.top > HEIGHT:
-                self.kill()  # Убить спрайт (удалить его из всех групп)
 
 
 # загрузка всей графики
@@ -248,23 +205,20 @@ pygame.mixer.music.set_volume(0.4)
 player_img = pygame.image.load(path.join(img_dir, "playerShip1_red.png")).convert()
 player_mini_img = pygame.transform.scale(player_img, (25, 19))
 player_mini_img.set_colorkey(BLACK)
-enemy_player_img = pygame.image.load(path.join(img_dir, "playerShip3_green.png")).convert()
+
 
 
 def newmob():
     m = Mob()
-    all_sprites.add(m)
+    sprites.all_sprites.add(m)
     mobs.add(m)
 
 
-all_sprites = pygame.sprite.Group()
 mobs = pygame.sprite.Group()
-bullets = pygame.sprite.Group()
-bullets_enemy = pygame.sprite.Group()
 player = Player()
 player_group = pygame.sprite.Group()
 player_group.add(player)
-all_sprites.add(player)
+sprites.all_sprites.add(player)
 enemy = 0
 for i in range(8):
     newmob()
@@ -281,12 +235,12 @@ while running:
     if game_over:
         show_go_screen()
         game_over = False
-        all_sprites = pygame.sprite.Group()
+        sprites.all_sprites = pygame.sprite.Group()
         mobs = pygame.sprite.Group()
-        bullets = pygame.sprite.Group()
+        sprites.bullets = pygame.sprite.Group()
         powerups = pygame.sprite.Group()
         player = Player()
-        all_sprites.add(player)
+        sprites.all_sprites.add(player)
         for i in range(8):
             newmob()
         score = 0
@@ -306,22 +260,23 @@ while running:
     if current_time - last_spawn_time > spawn_interval:
         last_spawn_time = current_time  # Обновляем время последнего спавна
         new_enemy = Enemy()  # Создаем нового врага
-        all_sprites.add(new_enemy)  # Добавляем врага в группу спрайтов
-        enemy = 1
-    # Обновление
-    all_sprites.update()
+        sprites.all_sprites.add(new_enemy)  # Добавляем врага в группу спрайтов
+        enemy = 0
 
+    # Обновление
+    sprites.all_sprites.update()
+    sprites.bullets_enemy.update()
     player.update()
 
-    hits = pygame.sprite.groupcollide(mobs, bullets, True, True)
+    hits = pygame.sprite.groupcollide(mobs, sprites.bullets, True, True)
     for hit in hits:
         score += 50 - hit.radius
         random.choice(expl_sounds).play()
         expl = Explosion(hit.rect.center, 'lg')
-        all_sprites.add(expl)
+        sprites.all_sprites.add(expl)
         if random.random() > 0.9:
             pow = Pow(hit.rect.center)
-            all_sprites.add(pow)
+            sprites.all_sprites.add(pow)
             powerups.add(pow)
         newmob()
 
@@ -337,12 +292,12 @@ while running:
     #             player.lives -= 1
     #             player.shield = 100
 
-    hits = pygame.sprite.spritecollide(player, bullets_enemy, True, pygame.sprite.collide_circle)
+    hits = pygame.sprite.spritecollide(player, sprites.bullets_enemy, True, pygame.sprite.collide_circle)
     for hit in hits:
         player.shield -= 10
         if player.shield <= 0:
             death_explosion = Explosion(player.rect.center, 'player')
-            all_sprites.add(death_explosion)
+            sprites.all_sprites.add(death_explosion)
             player.hide()
             player.lives -= 1
             player.shield = 100
@@ -362,11 +317,11 @@ while running:
     for hit in hits:
         player.shield -= hit.radius * 2
         expl = Explosion(hit.rect.center, 'sm')
-        all_sprites.add(expl)
+        sprites.all_sprites.add(expl)
         newmob()
         if player.shield <= 0:
             death_explosion = Explosion(player.rect.center, 'player')
-            all_sprites.add(death_explosion)
+            sprites.all_sprites.add(death_explosion)
             player.hide()
             player.lives -= 1
             player.shield = 100
@@ -378,7 +333,7 @@ while running:
     # Рендеринг
     screen.fill(BLACK)
     screen.blit(background, background_rect)
-    all_sprites.draw(screen)
+    sprites.all_sprites.draw(screen)
     draw_text(screen, str(score), 18, WIDTH / 2, 10)
 
     draw_shield_bar(screen, 5, 5, player.shield)

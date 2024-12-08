@@ -1,6 +1,8 @@
 import pygame
 from os import path
 import random
+import sprites
+
 
 WIDTH = 480
 HEIGHT = 600
