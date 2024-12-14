@@ -1,6 +1,7 @@
 import pygame
 from os import path
 import random
+import sprites
 
 WIDTH = 480
 HEIGHT = 600
@@ -13,7 +14,6 @@ img_dir = path.join(path.dirname(__file__), 'images')
 powerup_images = {}
 powerup_images['shield'] = pygame.image.load(path.join(img_dir, 'shield_gold.png')).convert()
 powerup_images['gun'] = pygame.image.load(path.join(img_dir, 'bolt_gold.png')).convert()
-powerups = pygame.sprite.Group()
 
 
 class Pow(pygame.sprite.Sprite):

@@ -13,8 +13,6 @@ img_dir = path.join(path.dirname(__file__), 'images')
 BLACK = (0, 0, 0)
 player_img = pygame.image.load(path.join(img_dir, "playerShip1_red.png")).convert()
 
-all_sprites = pygame.sprite.Group()
-bullets = pygame.sprite.Group()
 snd_dir = path.join(path.dirname(__file__), 'snd')
 shoot_sound = pygame.mixer.Sound(path.join(snd_dir, 'pew.wav'))
 

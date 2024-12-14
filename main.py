@@ -126,13 +126,11 @@ player_mini_img.set_colorkey(BLACK)
 def newmob():
     m = Mob()
     sprites.all_sprites.add(m)
-    mobs.add(m)
+    sprites.mobs.add(m)
 
 
-mobs = pygame.sprite.Group()
 player = Player()
-player_group = pygame.sprite.Group()
-player_group.add(player)
+sprites.player_group.add(player)
 sprites.all_sprites.add(player)
 enemy = 0
 for i in range(8):
@@ -150,10 +148,7 @@ while running:
     if game_over:
         show_go_screen()
         game_over = False
-        sprites.all_sprites = pygame.sprite.Group()
-        mobs = pygame.sprite.Group()
-        sprites.bullets = pygame.sprite.Group()
-        powerups = pygame.sprite.Group()
+        sprites.reset()
         player = Player()
         sprites.all_sprites.add(player)
         for i in range(8):
@@ -183,7 +178,7 @@ while running:
     sprites.bullets_enemy.update()
     player.update()
 
-    hits = pygame.sprite.groupcollide(mobs, sprites.bullets, True, True)
+    hits = pygame.sprite.groupcollide(sprites.mobs, sprites.bullets, True, True)
     for hit in hits:
         score += 50 - hit.radius
         random.choice(expl_sounds).play()
@@ -192,7 +187,7 @@ while running:
         if random.random() > 0.9:
             pow = Pow(hit.rect.center)
             sprites.all_sprites.add(pow)
-            powerups.add(pow)
+            sprites.powerups.add(pow)
         newmob()
 
     # if enemy == 1:
@@ -218,7 +213,7 @@ while running:
             player.shield = 100
 
     # Проверка столкновений игрока и улучшения
-    hits = pygame.sprite.spritecollide(player, powerups, True)
+    hits = pygame.sprite.spritecollide(player, sprites.powerups, True)
     for hit in hits:
         if hit.type == 'shield':
             player.shield += random.randrange(10, 30)
@@ -228,7 +223,7 @@ while running:
             player.powerup()
 
     # Проверка, не ударил ли моб игрока
-    hits = pygame.sprite.spritecollide(player, mobs, True, pygame.sprite.collide_circle)
+    hits = pygame.sprite.spritecollide(player, sprites.mobs, True, pygame.sprite.collide_circle)
     for hit in hits:
         player.shield -= hit.radius * 2
         expl = Explosion(hit.rect.center, 'sm')
