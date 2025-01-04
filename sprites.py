@@ -8,6 +8,7 @@ bullets = pygame.sprite.Group()
 mobs = pygame.sprite.Group()
 player_group = pygame.sprite.Group()
 powerups = pygame.sprite.Group()
+enemy = pygame.sprite.Group()
 
 
 def reset():

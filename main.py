@@ -10,8 +10,7 @@ from explosion import Explosion
 from enemy import Enemy
 import sprites
 from player import Player
-
-
+import math
 
 img_dir = path.join(path.dirname(__file__), 'img')
 snd_dir = path.join(path.dirname(__file__), 'snd')
@@ -105,6 +104,21 @@ def show_go_screen():
             if event.type == pygame.KEYUP:
                 waiting = False
 
+
+def collide_circle(sprite1, sprite2):
+    # Получаем центры спрайтов
+    center1 = (sprite1.rect.centerx, sprite1.rect.centery)
+    center2 = (sprite2.rect.centerx, sprite2.rect.centery)
+
+    # Рассчитываем расстояние между центрами
+    distance = math.sqrt((center1[0] - center2[0]) ** 2 + (center1[1] - center2[1]) ** 2)
+
+    # Сравниваем с суммой радиусов
+    if distance < (sprite1.radius + sprite2.radius):
+        return True
+    return False
+
+
 # загрузка всей графики
 background = pygame.image.load(path.join(img_dir, 'purple.png')).convert()
 background_rect = background.get_rect()
@@ -120,7 +134,6 @@ pygame.mixer.music.set_volume(0.4)
 player_img = pygame.image.load(path.join(img_dir, "playerShip1_red.png")).convert()
 player_mini_img = pygame.transform.scale(player_img, (25, 19))
 player_mini_img.set_colorkey(BLACK)
-
 
 
 def newmob():
@@ -165,18 +178,31 @@ while running:
         if player.lives == 0 and not death_explosion.alive():
             game_over = True
 
+    # Обновление
+    sprites.all_sprites.update()
+    sprites.bullets_enemy.update()
+    player.update()
+
     current_time = pygame.time.get_ticks()
     # Проверка, прошло ли 10 секунд
     if current_time - last_spawn_time > spawn_interval:
         last_spawn_time = current_time  # Обновляем время последнего спавна
         new_enemy = Enemy()  # Создаем нового врага
+        sprites.enemy.add(new_enemy)
         sprites.all_sprites.add(new_enemy)  # Добавляем врага в группу спрайтов
-        enemy = 0
 
-    # Обновление
-    sprites.all_sprites.update()
-    sprites.bullets_enemy.update()
-    player.update()
+        hits = pygame.sprite.spritecollide(player, sprites.enemy, True)
+        for hit in hits:
+            player.shield -= 90
+            random.choice(expl_sounds).play()
+            expl = Explosion(new_enemy.rect.center, 'lg')
+            sprites.all_sprites.add(expl)
+            if player.shield <= 0:
+                death_explosion = Explosion(player.rect.center, 'player')
+                sprites.all_sprites.add(death_explosion)
+                player.hide()
+                player.lives -= 1
+                player.shield = 100
 
     hits = pygame.sprite.groupcollide(sprites.mobs, sprites.bullets, True, True)
     for hit in hits:
@@ -205,6 +231,9 @@ while running:
     hits = pygame.sprite.spritecollide(player, sprites.bullets_enemy, True, pygame.sprite.collide_circle)
     for hit in hits:
         player.shield -= 10
+        random.choice(expl_sounds).play()
+        expl = Explosion(hit.rect.center, 'lg')
+        sprites.all_sprites.add(expl)
         if player.shield <= 0:
             death_explosion = Explosion(player.rect.center, 'player')
             sprites.all_sprites.add(death_explosion)
